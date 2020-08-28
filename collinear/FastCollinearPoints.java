@@ -3,19 +3,8 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 public class FastCollinearPoints {
-    private static final Comparator<Point> CORD_ORDER = new CordOrder();
-
-    private static class CordOrder implements Comparator<Point> {
-
-
-        public int compare(Point q1, Point q2) {
-            return q1.compareTo(q2);
-
-        }
-    }
 
     private final LineSegment[] ls;
     private int count;
@@ -47,31 +36,82 @@ public class FastCollinearPoints {
                 pointsToSort[k] = points[k];
             }
 
-
+            // System.out.println(Arrays.toString(pointsToSort));
             Arrays.sort(pointsToSort, firstElementP.slopeOrder());
             // System.out.println("Original sorted array:" + Arrays.toString(pointsToSort));
 
             int keepTrack = 1;
-            for (int i = 1; i < points.length - 1; i++) {
+            for (int i = 2; i < points.length; i++) {
+                // System.out.println(firstElementP + " " + pointsToSort[i]);
 
-                // System.out.println(pointsToSort[i + 1] + " " + pointsToSort[i]);
-                // System.out.println(pointsToSort[i + 1].slopeTo(firstElementP) + " " + pointsToSort[i].slopeTo(firstElementP));
-                // System.out.println(keepTrack);
-                // System.out.println(firstElementP + " " + pointsToSort[i - (keepTrack)]);
-                if (pointsToSort[i + 1].slopeTo(firstElementP) == pointsToSort[i].slopeTo(firstElementP)) {
+
+                if (pointsToSort[i].slopeTo(firstElementP) == pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack < 3) {
+
                     keepTrack++;
+                    // System.out.println("= & c<3");
+                    if (i == points.length - 1 && keepTrack == 3) {
+                        // System.out.println("before subSort:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
 
-                } else if (keepTrack >= 3) {
-                    // System.out.println(pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
-                    Arrays.sort(pointsToSort, i - (keepTrack - 1), i + 1, CORD_ORDER);
-                    // System.out.println("Subsorted array: " + Arrays.toString(pointsToSort));
-                    if (firstElementP.compareTo(pointsToSort[i - (keepTrack - 1)]) < 0) {
-                        ls[count++] = new LineSegment(firstElementP, pointsToSort[i]);
+                        Arrays.sort(pointsToSort, i - (keepTrack - 1), i + 1);
+                        // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
+                        // System.out.println("Before last if:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
+
+                        if (firstElementP.compareTo(pointsToSort[i - (keepTrack - 1)]) < 0) {
+                            ls[count++] = new LineSegment(firstElementP, pointsToSort[i]);
+                            // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i]);
+                        }
+
 
                     }
+
+
+                } else if (pointsToSort[i].slopeTo(firstElementP) == pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack >= 3) {
+
+                    keepTrack++;
+                    // System.out.println("= & c>=3");
+                    if (i == points.length - 1) {
+                        // System.out.println("before subSort:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
+
+                        Arrays.sort(pointsToSort, i - (keepTrack - 1), i + 1);
+                        // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
+                        // System.out.println("Before last if:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
+
+                        if (firstElementP.compareTo(pointsToSort[i - (keepTrack - 1)]) < 0) {
+                            ls[count++] = new LineSegment(firstElementP, pointsToSort[i]);
+                            // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i]);
+                        }
+
+
+                    }
+
+
+                } else if (pointsToSort[i].slopeTo(firstElementP) != pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack < 3) {
+                    keepTrack = 1;
+                    // System.out.println("!= & c<3");
+
+                } else {
+                    // System.out.println("!= & c>=3");
+
+                    // System.out.println("before subSort:" + pointsToSort[i - (keepTrack)] + " " + pointsToSort[i]);
+
+                    Arrays.sort(pointsToSort, i - (keepTrack), i);
+                    // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
+                    // System.out.println("Before last if:" + pointsToSort[i - (keepTrack)] + " " + pointsToSort[i - 1]);
+
+
+                    if (firstElementP.compareTo(pointsToSort[i - (keepTrack)]) < 0) {
+                        ls[count++] = new LineSegment(firstElementP, pointsToSort[i - 1]);
+                        // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i - 1]);
+                    }
+
                     keepTrack = 1;
 
+
                 }
+
+                // System.out.println("KEEPTRACK: " + keepTrack);
+
+
             }
         }
 
@@ -96,17 +136,19 @@ public class FastCollinearPoints {
 /*
         Point[] points = new Point[10];
         points[0] = new Point(1, 1);
-        points[1] = new Point(2, 2);
-        points[2] = new Point(3, 3);
-        points[3] = new Point(5, 8);
-        points[4] = new Point(3, 2);
-        points[5] = new Point(4, 4);
-        points[6] = new Point(2, 1);
+        points[1] = new Point(2, 1);
+        points[2] = new Point(3, 1);
+        points[3] = new Point(4, 1);
+        points[4] = new Point(1, 2);
+        points[5] = new Point(1, 3);
+        points[6] = new Point(1, 4);
         points[7] = new Point(4, 3);
-        points[8] = new Point(1, 0);
-        points[9] = new Point(5, 5);
+        points[8] = new Point(7, 5);
+        points[9] = new Point(2, 7);
 
         FastCollinearPoints fc = new FastCollinearPoints(points);
+        System.out.println(Arrays.toString(fc.segments()));
+
 
  */
 
@@ -137,6 +179,9 @@ public class FastCollinearPoints {
             segment.draw();
         }
         StdDraw.show();
+
+
     }
+
 
 }
