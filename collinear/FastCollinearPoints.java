@@ -19,7 +19,7 @@ public class FastCollinearPoints {
                 throw new IllegalArgumentException();
             }
             for (int j = i + 1; j < points.length; j++) {
-                if (i != j && points[i] == points[j]) {
+                if (i != j && points[i].compareTo(points[j]) == 0) {
                     throw new IllegalArgumentException();
                 }
 
@@ -28,89 +28,64 @@ public class FastCollinearPoints {
 
         ls = new LineSegment[(int) Math.pow(points.length, 2)];
         count = 0;
-
+        // Loop through all points, every time the first point is the origin point P
         for (int j = 0; j < points.length; j++) {
+            // firstElementP is the first element of the array which is the origin Point p
             Point firstElementP = points[j];
+            // Make a copy of the array so that the array we use is always unsorted
             Point[] pointsToSort = new Point[points.length];
-            for (int k = 0; k < points.length; k++) {
-                pointsToSort[k] = points[k];
-            }
+            System.arraycopy(points, 0, pointsToSort, 0, points.length);
 
-            // System.out.println(Arrays.toString(pointsToSort));
+            // sort the temporary array base on the slope order relevant to p
             Arrays.sort(pointsToSort, firstElementP.slopeOrder());
-            // System.out.println("Original sorted array:" + Arrays.toString(pointsToSort));
 
+            // Loop through the array to find adjacent points whiches slop are equal with p
             int keepTrack = 1;
             for (int i = 2; i < points.length; i++) {
-                // System.out.println(firstElementP + " " + pointsToSort[i]);
-
-
+                // when the next element is equal to previous one but not yet reached 3 or more adjacent points.
                 if (pointsToSort[i].slopeTo(firstElementP) == pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack < 3) {
 
                     keepTrack++;
-                    // System.out.println("= & c<3");
+                    // CORNER CASE when it is the last element and adjacent points are just increased to 3.
                     if (i == points.length - 1 && keepTrack == 3) {
-                        // System.out.println("before subSort:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
-
+                        // Sub-sort the array on natural order starting from the first adjacent element until the last adjecent element.
                         Arrays.sort(pointsToSort, i - (keepTrack - 1), i + 1);
-                        // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
-                        // System.out.println("Before last if:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
-
+                        //check if p is smaller than the first (now smallest) adjecent sequence
+                        // if it is than add LineSegment(p,last element of adjacent sequence)
+                        // To avoid duplicate entries
                         if (firstElementP.compareTo(pointsToSort[i - (keepTrack - 1)]) < 0) {
                             ls[count++] = new LineSegment(firstElementP, pointsToSort[i]);
-                            // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i]);
                         }
 
 
                     }
 
-
+                    // Next element is equal and we are at 3 or more adjacent elements
                 } else if (pointsToSort[i].slopeTo(firstElementP) == pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack >= 3) {
-
                     keepTrack++;
-                    // System.out.println("= & c>=3");
+                    // CORNER CASE when all of the entries are adjacent elements
                     if (i == points.length - 1) {
-                        // System.out.println("before subSort:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
-
                         Arrays.sort(pointsToSort, i - (keepTrack - 1), i + 1);
-                        // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
-                        // System.out.println("Before last if:" + pointsToSort[i - (keepTrack - 1)] + " " + pointsToSort[i]);
-
                         if (firstElementP.compareTo(pointsToSort[i - (keepTrack - 1)]) < 0) {
                             ls[count++] = new LineSegment(firstElementP, pointsToSort[i]);
-                            // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i]);
                         }
 
 
                     }
 
-
+                    // When next element is not equal and we dont have 3 adjacent points
                 } else if (pointsToSort[i].slopeTo(firstElementP) != pointsToSort[i - 1].slopeTo(firstElementP) && keepTrack < 3) {
                     keepTrack = 1;
-                    // System.out.println("!= & c<3");
-
+                    // when next element is not equal and we have reach 3 or more adjacent points
                 } else {
-                    // System.out.println("!= & c>=3");
-
-                    // System.out.println("before subSort:" + pointsToSort[i - (keepTrack)] + " " + pointsToSort[i]);
-
                     Arrays.sort(pointsToSort, i - (keepTrack), i);
-                    // System.out.println("SubSorted array: " + Arrays.toString(pointsToSort));
-                    // System.out.println("Before last if:" + pointsToSort[i - (keepTrack)] + " " + pointsToSort[i - 1]);
-
-
                     if (firstElementP.compareTo(pointsToSort[i - (keepTrack)]) < 0) {
                         ls[count++] = new LineSegment(firstElementP, pointsToSort[i - 1]);
-                        // System.out.println("-----NEW LINE SEGGY:" + firstElementP + ", " + pointsToSort[i - 1]);
                     }
-
                     keepTrack = 1;
 
 
                 }
-
-                // System.out.println("KEEPTRACK: " + keepTrack);
-
 
             }
         }
